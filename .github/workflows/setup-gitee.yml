@@ -1,0 +1,36 @@
+name: Setup Gitee Mirror Repo
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  create:
+    name: Ensure Gitee repo exists
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create Gitee repository when missing
+        shell: bash
+        env:
+          GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
+        run: |
+          set -Eeuo pipefail
+          repo="teamai"
+          api="https://gitee.com/api/v5/repos/moluxuanji-lab/$repo"
+          code="$(curl -sS -o /tmp/repo.json -w "%{http_code}" "$api?access_token=$GITEE_TOKEN")"
+          echo "GET $api -> $code"
+          if [[ "$code" == "200" ]]; then
+            echo "Gitee repository already exists."
+            exit 0
+          fi
+          echo "Creating Gitee repository moluxuanji-lab/$repo ..."
+          curl -sS -X POST "https://gitee.com/api/v5/orgs/moluxuanji-lab/repos" \
+            --data-urlencode "access_token=$GITEE_TOKEN" \
+            --data-urlencode "name=$repo" \
+            --data-urlencode "path=$repo" \
+            --data-urlencode "private=false" \
+            --data-urlencode "auto_init=false" \
+            --data-urlencode "description=TeamAI team repo mirror" \
+            -w "\nHTTP %{http_code}\n"
