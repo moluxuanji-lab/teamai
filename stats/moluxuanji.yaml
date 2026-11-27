@@ -1,12 +1,15 @@
 username: moluxuanji
-updatedAt: 2026-11-27T10:12:00.302Z
-skills: {}
+updatedAt: 2026-11-27T10:32:29.494Z
+skills:
+  teamai:
+    count: 3
+    lastUsed: 2026-11-27T10:32:12.770Z
 interventions:
-  sessions: 1
+  sessions: 2
   interrupt: 0
   toolReject: 0
   correction: 0
-prompts: 1
+prompts: 6
 tokens:
   input: 0
   output: 0
@@ -14,11 +17,11 @@ tokens:
   cacheCreation: 0
 attended:
   interventions:
-    sessions: 1
+    sessions: 2
     interrupt: 0
     toolReject: 0
     correction: 0
-  prompts: 1
+  prompts: 6
   tokens:
     input: 0
     output: 0
