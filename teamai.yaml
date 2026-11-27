@@ -1,5 +1,5 @@
-team: my-team
-description: TeamAI shared resources
+team: moluxuanji-lab
+description: moluxuanji-lab 团队共享 AI 资源
 repo: https://github.com/moluxuanji-lab/teamai.git
 provider: github
 sharing:
