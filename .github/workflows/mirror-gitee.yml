@@ -1,0 +1,61 @@
+name: GitHub to Gitee Mirror
+
+on:
+  push:
+  schedule:
+    - cron: "17 3 * * *"
+      timezone: "Asia/Singapore"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gitee-mirror-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  mirror:
+    name: Sync branches and tags to Gitee
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Mirror GitHub repository to Gitee
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
+        run: |
+          set -Eeuo pipefail
+
+          if [[ -z "$GITEE_TOKEN" ]]; then
+            echo "::error::Missing repository secret GITEE_TOKEN. Add it in Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+
+          repo_name="$(basename "$GITHUB_REPOSITORY")"
+          source_url="https://x-access-token:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git"
+          # Gitee organization mirror namespace; repository slugs are lowercase.
+          target_repo="${repo_name,,}"
+          target_url="https://oauth2:$GITEE_TOKEN@gitee.com/moluxuanji-lab/$target_repo.git"
+
+          git clone --mirror "$source_url" source.git
+
+          # Update every source branch. Do not delete Gitee-only branches.
+          while IFS= read -r branch; do
+            [[ -n "$branch" ]] || continue
+            target_branch="$branch"
+
+            # Mirror each GitHub branch to the same-named Gitee branch.
+
+            echo "Syncing branch: $branch -> $target_branch"
+            git -C source.git push --force "$target_url" \
+              "refs/heads/$branch:refs/heads/$target_branch"
+          done < <(git -C source.git for-each-ref --format='%(refname:strip=2)' refs/heads)
+
+          echo "Syncing tags"
+          git -C source.git push --force "$target_url" \
+            'refs/tags/*:refs/tags/*'
+
+          echo "Sync completed. Gitee-only refs are intentionally retained."
